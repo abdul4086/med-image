@@ -1,5 +1,5 @@
 import React from 'react';
-import { BiReset, BiCrop } from 'react-icons/bi';
+import { BiReset, BiCrop, BiRuler } from 'react-icons/bi';
 import { FiMove, FiZoomIn, FiZoomOut } from 'react-icons/fi';
 import { BsCursor } from 'react-icons/bs';
 
@@ -85,6 +85,18 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
         title="Crop Tool"
       >
         <BiCrop size={20} />
+      </button>
+
+      <button
+        className={`p-2 rounded-lg transition-all duration-200 flex items-center justify-center ${
+          selectedTool === 'measure' 
+            ? 'bg-blue-500 text-white shadow-md' 
+            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
+        }`}
+        onClick={() => onToolSelect('measure')}
+        title="Measurement Tools"
+      >
+        <BiRuler size={20} />
       </button>
     </div>
   );

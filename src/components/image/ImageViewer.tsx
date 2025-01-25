@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import ImageToolbar from './ImageToolbar.tsx';
 import CropOverlay from './CropOverlay.tsx';
 import GridOverlay from './GridOverlay.tsx';
+import MeasurementDock from './MeasurementDock.tsx';
 
 interface ImageViewerProps {
   imageUrl: string;
@@ -14,11 +15,21 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [croppedImage, setCroppedImage] = useState<string | null>(null);
+  const [measurements, setMeasurements] = useState<any[]>([]);
+  const [annotations, setAnnotations] = useState<any[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
+  const [showMeasurementDock, setShowMeasurementDock] = useState(false);
 
   const handleToolSelect = (tool: string) => {
-    setSelectedTool(tool);
+    if (tool === 'measure') {
+      setShowMeasurementDock(true);
+    } else {
+      setSelectedTool(tool);
+      if (!['line', 'circle', 'angle', 'roi', 'distance', 'annotate'].includes(tool)) {
+        setShowMeasurementDock(false);
+      }
+    }
   };
 
   const handleCropComplete = async (crop: { x: number; y: number; width: number; height: number }) => {
@@ -163,6 +174,10 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
     setCroppedImage(null);
   };
 
+  const handleMeasurementComplete = (measurement: any) => {
+    setMeasurements([...measurements, measurement]);
+  };
+
   useEffect(() => {
     const container = containerRef.current;
     if (container) {
@@ -183,8 +198,8 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
   const currentImageUrl = croppedImage || imageUrl;
 
   return (
-    <div className="flex flex-row h-full w-full gap-4 p-4 bg-gray-100 dark:bg-gray-900 rounded-lg">
-      <div className="flex-1">
+    <div className="flex h-full w-full p-4 bg-gray-100 dark:bg-gray-900 rounded-lg">
+      <div className="flex-1 relative">
         <div className="bg-white dark:bg-gray-800 h-full w-full rounded-lg shadow-lg">
           <div 
             ref={containerRef}
@@ -224,15 +239,30 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
             )}
           </div>
         </div>
+        
+        <div className="absolute right-4 top-4">
+          <div className="relative">
+            <ImageToolbar
+              onToolSelect={handleToolSelect}
+              selectedTool={selectedTool}
+              onZoomIn={handleZoomIn}
+              onZoomOut={handleZoomOut}
+              onReset={handleReset}
+              scale={scale}
+            />
+            {showMeasurementDock && (
+              <MeasurementDock
+                onToolSelect={setSelectedTool}
+                selectedTool={selectedTool}
+                onClose={() => {
+                  setShowMeasurementDock(false);
+                  setSelectedTool(null);
+                }}
+              />
+            )}
+          </div>
+        </div>
       </div>
-      <ImageToolbar
-        onToolSelect={handleToolSelect}
-        selectedTool={selectedTool}
-        onZoomIn={handleZoomIn}
-        onZoomOut={handleZoomOut}
-        onReset={handleReset}
-        scale={scale}
-      />
     </div>
   );
 };
