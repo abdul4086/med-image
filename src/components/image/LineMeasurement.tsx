@@ -30,11 +30,11 @@ const LineMeasurement: React.FC<LineMeasurementProps> = ({
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const calculateRealDistance = (p1: Point, p2: Point): { pixels: number; mm: number } => {
-    // Calculate pixel distance
+    // Calculate pixel distance and adjust for scale
     const pixelDistance = Math.sqrt(
       Math.pow((p2.x - p1.x), 2) + 
       Math.pow((p2.y - p1.y), 2)
-    );
+    ) / scale; // Divide by scale to get actual pixel distance
 
     // Convert to millimeters using fixed ratio (0.4 mm/pixel)
     const PIXEL_TO_MM_RATIO = 0.4;
