@@ -1,4 +1,3 @@
-import { useTheme } from '../context/ThemeContext.tsx';
 import { theme } from '../styles/theme.ts';
 
 export const useThemeClass = () => {

@@ -6,7 +6,7 @@ import { ThemeProvider } from './context/ThemeContext.tsx';
 function App() {
   return (
     <ThemeProvider>
-      <div className="flex h-full w-full">
+      <div className="h-screen w-screen">
         <Routes />
       </div>
     </ThemeProvider>
