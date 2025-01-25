@@ -1,5 +1,5 @@
 import React from 'react';
-import { BiReset } from 'react-icons/bi';
+import { BiReset, BiCrop } from 'react-icons/bi';
 import { FiMove, FiZoomIn, FiZoomOut } from 'react-icons/fi';
 import { BsCursor } from 'react-icons/bs';
 
@@ -21,9 +21,9 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
   scale
 }) => {
   return (
-    <div className="w-16 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 flex flex-col gap-2">
+    <div className="w-16 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 flex flex-col gap-2 border-2 border-gray-700 dark:border-gray-500">
       <button
-        className={`p-2 rounded-lg transition-all duration-200 ${
+        className={`p-2 rounded-lg transition-all duration-200 flex items-center justify-center ${
           selectedTool === 'cursor' 
             ? 'bg-blue-500 text-white shadow-md' 
             : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
@@ -73,6 +73,18 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
         title="Reset View"
       >
         <BiReset size={20} />
+      </button>
+
+      <button
+        className={`p-2 rounded-lg transition-all duration-200 flex items-center justify-center ${
+          selectedTool === 'crop' 
+            ? 'bg-blue-500 text-white shadow-md' 
+            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
+        }`}
+        onClick={() => onToolSelect('crop')}
+        title="Crop Tool"
+      >
+        <BiCrop size={20} />
       </button>
     </div>
   );

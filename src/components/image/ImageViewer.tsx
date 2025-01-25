@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ImageToolbar from './ImageToolbar.tsx';
+import CropOverlay from './CropOverlay.tsx';
 
 interface ImageViewerProps {
   imageUrl: string;
@@ -11,11 +12,76 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [croppedImage, setCroppedImage] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
 
   const handleToolSelect = (tool: string) => {
     setSelectedTool(tool);
+  };
+
+  const handleCropComplete = async (crop: { x: number; y: number; width: number; height: number }) => {
+    if (!imageRef.current) return;
+
+    // Create a new image to ensure it's loaded
+    const image = new Image();
+    image.src = croppedImage || imageUrl;
+
+    await new Promise<void>((resolve) => {
+      image.onload = () => {
+        // Create canvas with natural image dimensions
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        // Get the actual image dimensions
+        const displayedWidth = imageRef.current!.width;
+        const displayedHeight = imageRef.current!.height;
+        
+        // Calculate scaling factors
+        const scaleX = image.naturalWidth / displayedWidth;
+        const scaleY = image.naturalHeight / displayedHeight;
+
+        // Convert crop coordinates to actual image coordinates
+        const actualCrop = {
+          x: crop.x * scaleX,
+          y: crop.y * scaleY,
+          width: crop.width * scaleX,
+          height: crop.height * scaleY
+        };
+
+        // Set canvas size to crop dimensions
+        canvas.width = actualCrop.width;
+        canvas.height = actualCrop.height;
+
+        // Draw the cropped portion
+        ctx.drawImage(
+          image,
+          actualCrop.x,
+          actualCrop.y,
+          actualCrop.width,
+          actualCrop.height,
+          0,
+          0,
+          actualCrop.width,
+          actualCrop.height
+        );
+
+        // Convert to base64 with maximum quality
+        const croppedDataUrl = canvas.toDataURL('image/png', 1.0);
+
+        // Create a new Image object to ensure the crop is loaded properly
+        const croppedImg = new Image();
+        croppedImg.onload = () => {
+          setCroppedImage(croppedDataUrl);
+          setSelectedTool(null);
+          setScale(1);
+          setPosition({ x: 0, y: 0 });
+          resolve();
+        };
+        croppedImg.src = croppedDataUrl;
+      };
+    });
   };
 
   const handleWheel = (e: React.WheelEvent) => {
@@ -30,7 +96,6 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
       const delta = e.deltaY > 0 ? 0.9 : 1.1;
       const newScale = Math.min(Math.max(scale * delta, 0.1), 5);
 
-      // Adjust position to zoom towards mouse cursor
       const scaleChange = newScale - scale;
       setPosition(prev => ({
         x: prev.x - (mouseX - rect.width / 2) * scaleChange,
@@ -55,7 +120,6 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
       const newX = e.clientX - dragStart.x;
       const newY = e.clientY - dragStart.y;
       
-      // Calculate boundaries
       const container = containerRef.current;
       const image = imageRef.current;
       if (container && image) {
@@ -89,6 +153,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
   const handleReset = () => {
     setScale(1);
     setPosition({ x: 0, y: 0 });
+    setCroppedImage(null);
   };
 
   useEffect(() => {
@@ -108,13 +173,15 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
     };
   }, []);
 
+  const currentImageUrl = croppedImage || imageUrl;
+
   return (
-    <div className="flex flex-row h-full w-full gap-4 p-4 bg-gray-100 dark:bg-gray-900 rounded-lg border-2 border-gray=700">
-      <div className="flex-1 flex flex-col">
-        <div className="bg-white dark:bg-gray-800 h-full w-full rounded-lg shadow-lg p-4">
+    <div className="flex flex-row h-full w-full gap-4 p-4 bg-gray-100 dark:bg-gray-900 rounded-lg">
+      <div className="flex-1">
+        <div className="bg-white dark:bg-gray-800 h-full w-full rounded-lg shadow-lg">
           <div 
             ref={containerRef}
-            className="relative h-full w-full bg-gray-50 dark:bg-gray-900 rounded-lg overflow-hidden"
+            className="relative h-full w-full bg-gray-50 dark:bg-gray-700 rounded-lg overflow-hidden border-2 border-gray-700 dark:border-gray-500"
             onWheel={handleWheel}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
@@ -129,7 +196,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
             >
               <img
                 ref={imageRef}
-                src={imageUrl}
+                src={currentImageUrl}
                 alt="Medical scan"
                 className="max-w-full max-h-full object-contain transition-transform duration-200"
                 style={{
@@ -139,6 +206,14 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
                 onDragStart={(e) => e.preventDefault()}
               />
             </div>
+            {selectedTool === 'crop' && (
+              <CropOverlay
+                onCropComplete={handleCropComplete}
+                onCancel={() => setSelectedTool(null)}
+                imageRef={imageRef}
+                scale={scale}
+              />
+            )}
           </div>
         </div>
       </div>

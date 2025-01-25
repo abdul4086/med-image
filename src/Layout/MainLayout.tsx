@@ -4,15 +4,11 @@ import Header from '../components/Header.tsx';
 
 const MainLayout = () => {
   return (
-    <div className="flex flex-col h-full w-full">
-      {/* Add your header, navigation, etc. here */}
+    <div className="flex flex-col h-screen w-screen">
       <Header />
-      <div className="flex flex-col h-full w-full items-center justify-center dark:bg-black">
-        <main>
-          <Outlet />
-        </main>
+      <div className="flex-1 dark:bg-black">
+        <Outlet />
       </div>
-      {/* Add your footer here */}
     </div>
   );
 };
