@@ -3,6 +3,8 @@ import ImageToolbar from './ImageToolbar.tsx';
 import CropOverlay from './CropOverlay.tsx';
 import GridOverlay from './GridOverlay.tsx';
 import MeasurementDock from './MeasurementDock.tsx';
+import LineMeasurement from './LineMeasurement.tsx';
+import CalibrationDialog from './CalibrationDialog.tsx';
 
 interface ImageViewerProps {
   imageUrl: string;
@@ -20,6 +22,8 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const [showMeasurementDock, setShowMeasurementDock] = useState(false);
+  const [pixelsPerMm, setPixelsPerMm] = useState<number>(0);
+  const [isCalibrating, setIsCalibrating] = useState(false);
 
   const handleToolSelect = (tool: string) => {
     if (tool === 'measure') {
@@ -176,6 +180,20 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
 
   const handleMeasurementComplete = (measurement: any) => {
     setMeasurements([...measurements, measurement]);
+    
+    // If this is the first measurement and we're not calibrated, start calibration
+    if (measurements.length === 0 && pixelsPerMm === 0) {
+      setIsCalibrating(true);
+    }
+  };
+
+  const handleCalibration = (knownDistance: number) => {
+    if (!imageRef.current) return;
+    
+    // Set fixed pixel to mm ratio (0.4 mm/pixel)
+    const PIXEL_TO_MM_RATIO = 0.4;
+    setPixelsPerMm(1 / PIXEL_TO_MM_RATIO); // Convert ratio to pixels per mm
+    setIsCalibrating(false);
   };
 
   useEffect(() => {
@@ -201,6 +219,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
     <div className="flex h-full w-full p-4 bg-gray-100 dark:bg-gray-900 rounded-lg">
       <div className="flex-1 relative">
         <div className="bg-white dark:bg-gray-800 h-full w-full rounded-lg shadow-lg">
+          {/* Image Container Frame */}
           <div 
             ref={containerRef}
             className="relative h-full w-full bg-gray-50 dark:bg-gray-700 rounded-lg overflow-hidden border-2 border-gray-700 dark:border-gray-500"
@@ -237,6 +256,17 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
                 scale={scale}
               />
             )}
+            {selectedTool === 'line' && (
+              <LineMeasurement
+                imageRef={imageRef}
+                containerRef={containerRef}
+                scale={scale}
+                position={position}
+                pixelsPerMm={pixelsPerMm}
+                onMeasurementComplete={handleMeasurementComplete}
+                isActive={selectedTool === 'line'}
+              />
+            )}
           </div>
         </div>
         
@@ -258,6 +288,12 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
                   setShowMeasurementDock(false);
                   setSelectedTool(null);
                 }}
+              />
+            )}
+            {isCalibrating && (
+              <CalibrationDialog
+                onCalibrate={handleCalibration}
+                onCancel={() => setIsCalibrating(false)}
               />
             )}
           </div>
