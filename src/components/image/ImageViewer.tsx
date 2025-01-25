@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ImageToolbar from './ImageToolbar.tsx';
 import CropOverlay from './CropOverlay.tsx';
+import GridOverlay from './GridOverlay.tsx';
 
 interface ImageViewerProps {
   imageUrl: string;
@@ -85,23 +86,29 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
   };
 
   const handleWheel = (e: React.WheelEvent) => {
-    if (e.ctrlKey) {
+    if (e.ctrlKey || e.metaKey) { // Support both Ctrl and Cmd/Meta keys
       e.preventDefault();
       const rect = containerRef.current?.getBoundingClientRect();
-      if (!rect) return;
+      if (!rect || !imageRef.current) return;
 
-      const mouseX = e.clientX - rect.left;
-      const mouseY = e.clientY - rect.top;
+      // Calculate mouse position relative to image
+      const imageRect = imageRef.current.getBoundingClientRect();
+      const mouseX = e.clientX - imageRect.left;
+      const mouseY = e.clientY - imageRect.top;
 
-      const delta = e.deltaY > 0 ? 0.9 : 1.1;
-      const newScale = Math.min(Math.max(scale * delta, 0.1), 5);
+      // Calculate zoom
+      const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+      const newScale = Math.min(Math.max(scale * zoomFactor, 0.1), 10);
 
-      const scaleChange = newScale - scale;
-      setPosition(prev => ({
-        x: prev.x - (mouseX - rect.width / 2) * scaleChange,
-        y: prev.y - (mouseY - rect.height / 2) * scaleChange
-      }));
+      // Calculate new position to zoom towards mouse
+      const newPosition = {
+        x: position.x - (mouseX * (zoomFactor - 1)),
+        y: position.y - (mouseY * (zoomFactor - 1))
+      };
+
+      // Update state
       setScale(newScale);
+      setPosition(newPosition);
     }
   };
 
@@ -189,7 +196,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
             onMouseLeave={handleMouseUp}
           >
             <div 
-              className="flex items-center justify-center h-full w-full"
+              className="absolute inset-0 flex items-center justify-center"
               style={{
                 transform: `translate(${position.x}px, ${position.y}px)`,
               }}
@@ -198,7 +205,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
                 ref={imageRef}
                 src={currentImageUrl}
                 alt="Medical scan"
-                className="max-w-full max-h-full object-contain transition-transform duration-200"
+                className="max-w-none transition-transform duration-200"
                 style={{
                   transform: `scale(${scale})`,
                   transformOrigin: 'center',
@@ -206,6 +213,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
                 onDragStart={(e) => e.preventDefault()}
               />
             </div>
+            {scale > 1 && <GridOverlay scale={scale} />}
             {selectedTool === 'crop' && (
               <CropOverlay
                 onCropComplete={handleCropComplete}
