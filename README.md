@@ -1,46 +1,83 @@
-# Getting Started with Create React App
+# Medical Image Viewer Documentation
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Table of Contents
 
-## Available Scripts
+1. [Tech Stack](#tech-stack)
+2. [Setup Guide](#setup-guide)
+3. [Functionality Description](#functionality-description)
 
-In the project directory, you can run:
+## Tech Stack
 
-### `npm start`
+This project is built using the following technologies:
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- **React**: A JavaScript library for building user interfaces.
+- **TypeScript**: A superset of JavaScript that adds static types, enhancing code quality and maintainability.
+- **Tailwind CSS**: A utility-first CSS framework for rapid UI development.
+- **React Icons**: A library for including icons in React applications.
+- **Vercel**: A platform for deploying frontend applications.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Setup Guide
 
-### `npm test`
+To set up the project locally, follow these steps:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Prerequisites
 
-### `npm run build`
+- Ensure you have [Node.js](https://nodejs.org/) installed (version 14 or higher).
+- Install [npm](https://www.npmjs.com/) (comes with Node.js).
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Installation Steps
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+1. **Clone the Repository**:
+   ```bash
+   git clone <repository-url>
+   cd medical-image-viewer
+   ```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+2. **Install Dependencies**:
+   Run the following command to install the required packages:
+   ```bash
+   npm install
+   ```
 
-### `npm run eject`
+3. **Start the Development Server**:
+   To run the application in development mode, use:
+   ```bash
+   npm start
+   ```
+   Open your browser and navigate to [http://localhost:3000](http://localhost:3000).
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+4. **Build for Production**:
+   To create an optimized build for production, run:
+   ```bash
+   npm run build
+   ```
+   This will generate a `build` directory containing the production-ready files.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Functionality Description
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+The Medical Image Viewer application provides several key functionalities:
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+### 1. Image Upload
+- Users can upload medical images by dragging and dropping them into the designated area or by selecting files from their device.
 
-## Learn More
+### 2. Image Adjustments
+- Users can adjust the brightness and contrast of the uploaded images using sliders. This allows for better visibility and analysis of the images.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### 3. Measurement Tools
+- The application includes various measurement tools that allow users to measure distances and angles directly on the images. This is particularly useful for medical analysis.
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### 4. Zoom and Pan
+- Users can zoom in and out of the images for detailed inspection. The pan functionality allows users to move around the image when zoomed in.
+
+### 5. Undo/Redo Functionality
+- Users can easily revert or redo actions taken during image analysis, providing flexibility in their workflow.
+
+### 6. Responsive Design
+- The application is designed to be responsive, ensuring a good user experience on both desktop and mobile devices.
+
+### 7. Deployment
+- The application is deployed on [Vercel](https://vercel.com) (or any other hosting service you choose). You can access it at: [Your Deployed App Link](<your-deployed-app-link>).
+
+## Conclusion
+
+This documentation provides an overview of the Medical Image Viewer project, including the tech stack, setup instructions, and a description of its functionalities. For any further questions or contributions, feel free to reach out or submit a pull request.
