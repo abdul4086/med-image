@@ -5,6 +5,7 @@ import GridOverlay from './GridOverlay.tsx';
 import ImageToolbar from './ImageToolbar.tsx';
 import LineMeasurement from './LineMeasurement.tsx';
 import MeasurementDock from './MeasurementDock.tsx';
+import { FaSave } from 'react-icons/fa';
 
 interface ImageViewerProps {
   imageUrl: string;
@@ -212,6 +213,62 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
     setIsCalibrating(false);
   };
 
+  const handleSaveImage = async () => {
+    if (!imageRef.current) return;
+
+    // Create a canvas with the same dimensions as the displayed image
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // Create a new image to ensure it's loaded
+    const image = new Image();
+    image.src = croppedImage || imageUrl;
+
+    await new Promise<void>((resolve) => {
+        image.onload = () => {
+            // Set canvas dimensions to match the natural image size
+            canvas.width = image.naturalWidth;
+            canvas.height = image.naturalHeight;
+
+            // Draw the base image
+            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+            // Draw all measurements
+            measurements.forEach(measurement => {
+                if (measurement.type === 'line' && measurement.points) {
+                    const { start, end } = measurement.points; // Accessing start and end points
+
+                    const scaleX = canvas.width / imageRef.current!.width;
+                    const scaleY = canvas.height / imageRef.current!.height;
+
+                    ctx.beginPath();
+                    ctx.strokeStyle = '#FF0000';
+                    ctx.lineWidth = 2;
+                    ctx.moveTo(start.x * scaleX, start.y * scaleY);
+                    ctx.lineTo(end.x * scaleX, end.y * scaleY);
+                    ctx.stroke();
+
+                    // Add measurement text
+                    ctx.font = '16px Arial';
+                    ctx.fillStyle = '#FF0000';
+                    const midX = (start.x + end.x) * scaleX / 2;
+                    const midY = (start.y + end.y) * scaleY / 2;
+                    const text = measurement.value; // Use the value from the measurement
+                    ctx.fillText(text, midX, midY - 10);
+                }
+            });
+
+            // Create download link
+            const link = document.createElement('a');
+            link.download = 'medical-image-with-measurements.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+            resolve();
+        };
+    });
+  };
+
   useEffect(() => {
     const container = containerRef.current;
     if (container) {
@@ -235,6 +292,15 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
     <div className="flex h-full w-full p-4 bg-gray-100 dark:bg-gray-900 rounded-lg">
       <div className="flex-1 relative">
         <div className="bg-white dark:bg-gray-800 h-full w-full rounded-lg shadow-lg">
+          {/* Add Save Button */}
+          <button
+            onClick={handleSaveImage}
+            className="absolute left-4 top-4 z-10 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg"
+          >
+            <FaSave />
+            Save Image
+          </button>
+
           {/* Image Container Frame */}
           <div 
             ref={containerRef}
