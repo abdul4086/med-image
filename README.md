@@ -76,7 +76,7 @@ The Medical Image Viewer application provides several key functionalities:
 - The application is designed to be responsive, ensuring a good user experience on both desktop and mobile devices.
 
 ### 7. Deployment
-- The application is deployed on [Vercel](https://vercel.com) (or any other hosting service you choose). You can access it at: [Your Deployed App Link](<your-deployed-app-link>).
+- The application is deployed on [Vercel](https://vercel.com) (or any other hosting service you choose). You can access it at: [Your Deployed App Link](https://med-image.vercel.app/).
 
 ## Conclusion
 
