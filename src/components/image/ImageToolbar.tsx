@@ -2,6 +2,7 @@ import React from 'react';
 import { BiReset, BiCrop, BiRuler, BiUndo, BiRedo } from 'react-icons/bi';
 import { FiMove, FiZoomIn, FiZoomOut } from 'react-icons/fi';
 import { BsCursor } from 'react-icons/bs';
+import { FaAdjust } from 'react-icons/fa';
 
 interface ImageToolbarProps {
   onToolSelect: (tool: string) => void;
@@ -14,6 +15,7 @@ interface ImageToolbarProps {
   canUndo: boolean;
   canRedo: boolean;
   scale: number;
+  onOpenAdjustments: () => void;
 }
 
 const ImageToolbar: React.FC<ImageToolbarProps> = ({
@@ -26,7 +28,8 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
   onRedo,
   canUndo,
   canRedo,
-  scale
+  scale,
+  onOpenAdjustments,
 }) => {
   return (
     <div className="w-16 bg-white dark:bg-gray-800 rounded-lg shadow-lg p-2 flex flex-col gap-2 border-2 border-gray-700 dark:border-gray-500">
@@ -113,6 +116,14 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
         title="Measurement Tools"
       >
         <BiRuler size={20} />
+      </button>
+
+      <button
+        className="p-2 rounded-lg transition-all duration-200 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-gray-600"
+        onClick={onOpenAdjustments}
+        title="Adjust Brightness and Contrast"
+      >
+        <FaAdjust size={20} />
       </button>
     </div>
   );

@@ -7,6 +7,12 @@ import MeasurementDock from './MeasurementDock.tsx';
 import CircleMeasurement from './CircleMeasurement.tsx';
 import AngleMeasurement from './AngleMeasurement.tsx';
 import { FaSave } from 'react-icons/fa';
+import ImageAdjustmentMenu from './ImageAdjustmentMenu.tsx';
+
+interface Adjustments {
+  brightness: number;
+  contrast: number;
+}
 
 interface ImageViewerProps {
   imageUrl: string;
@@ -28,6 +34,8 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
   const [measurements, setMeasurements] = useState<any[]>([]);
   const [history, setHistory] = useState<any[][]>([[]]);
   const [historyIndex, setHistoryIndex] = useState(0);
+  const [adjustments, setAdjustments] = useState<Adjustments>({ brightness: 100, contrast: 100 });
+  const [showAdjustmentsMenu, setShowAdjustmentsMenu] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const [showMeasurementDock, setShowMeasurementDock] = useState(false);
@@ -43,6 +51,14 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
         setShowMeasurementDock(false);
       }
     }
+  };
+
+  const handleOpenAdjustments = () => {
+    setShowAdjustmentsMenu(true);
+  };
+
+  const handleCloseAdjustments = () => {
+    setShowAdjustmentsMenu(false);
   };
 
   const handleWheel = (e: React.WheelEvent) => {
@@ -299,6 +315,10 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
     });
   };
 
+  const handleAdjustmentsChange = (newAdjustments: Adjustments) => {
+    setAdjustments(newAdjustments);
+  };
+
   useEffect(() => {
     const container = containerRef.current;
     if (container) {
@@ -319,7 +339,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
   const currentImageUrl = croppedImage || imageUrl;
 
   return (
-    <div className="flex h-full w-full p-4 bg-gray-100 dark:bg-gray-900 rounded-lg">
+    <div className="flex h-full w-full p-4 bg-gray-100 dark:bg-gray-900 rounded-lg relative">
       <div className="flex-1 relative">
         <div className="bg-white dark:bg-gray-800 h-full w-full rounded-lg shadow-lg">
           <button
@@ -353,6 +373,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
                 style={{
                   transform: `scale(${scale})`,
                   transformOrigin: 'center',
+                  filter: `brightness(${adjustments.brightness}%) contrast(${adjustments.contrast}%)`,
                 }}
                 onDragStart={(e) => e.preventDefault()}
               />
@@ -410,6 +431,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
               canUndo={historyIndex > 0}
               canRedo={historyIndex < history.length - 1}
               scale={scale}
+              onOpenAdjustments={handleOpenAdjustments}
             />
             {showMeasurementDock && (
               <MeasurementDock
@@ -425,6 +447,13 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
               <CalibrationDialog
                 onCalibrate={handleCalibration}
                 onCancel={() => setIsCalibrating(false)}
+              />
+            )}
+            {showAdjustmentsMenu && (
+              <ImageAdjustmentMenu
+                onClose={handleCloseAdjustments}
+                setBrightness={(value) => handleAdjustmentsChange({ ...adjustments, brightness: value })}
+                setContrast={(value) => handleAdjustmentsChange({ ...adjustments, contrast: value })}
               />
             )}
           </div>
