@@ -13,7 +13,7 @@ const MeasurementTools: React.FC<MeasurementToolsProps> = ({
 }) => {
   const tools = [
     { id: 'line', icon: BiRuler, label: 'Line Measurement' },
-    { id: 'circle', icon: BiCircle, label: 'Circle/Ellipse' },
+    { id: 'circle', icon: BiCircle, label: 'Circle/Ellipse  ' },
     { id: 'angle', icon: FaAngleRight, label: 'Angle Measurement' },
     { id: 'roi', icon: BiSquare, label: 'Region of Interest' },
     { id: 'annotate', icon: BiPencil, label: 'Annotate' },

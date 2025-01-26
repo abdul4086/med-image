@@ -1,10 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
-import ImageToolbar from './ImageToolbar.tsx';
+import React, { useEffect, useRef, useState } from 'react';
+import CalibrationDialog from './CalibrationDialog.tsx';
 import CropOverlay from './CropOverlay.tsx';
 import GridOverlay from './GridOverlay.tsx';
-import MeasurementDock from './MeasurementDock.tsx';
+import ImageToolbar from './ImageToolbar.tsx';
 import LineMeasurement from './LineMeasurement.tsx';
-import CalibrationDialog from './CalibrationDialog.tsx';
+import MeasurementDock from './MeasurementDock.tsx';
 
 interface ImageViewerProps {
   imageUrl: string;
@@ -18,7 +18,6 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [croppedImage, setCroppedImage] = useState<string | null>(null);
   const [measurements, setMeasurements] = useState<any[]>([]);
-  const [annotations, setAnnotations] = useState<any[]>([]);
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const [showMeasurementDock, setShowMeasurementDock] = useState(false);
@@ -101,29 +100,46 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
   };
 
   const handleWheel = (e: React.WheelEvent) => {
-    if (e.ctrlKey || e.metaKey) { // Support both Ctrl and Cmd/Meta keys
+    if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
-      const rect = containerRef.current?.getBoundingClientRect();
-      if (!rect || !imageRef.current) return;
+      const container = containerRef.current;
+      const image = imageRef.current;
+      if (!container || !image) return;
 
-      // Calculate mouse position relative to image
-      const imageRect = imageRef.current.getBoundingClientRect();
-      const mouseX = e.clientX - imageRect.left;
-      const mouseY = e.clientY - imageRect.top;
+      // Get container and image dimensions
+      const containerRect = container.getBoundingClientRect();
+      const imageRect = image.getBoundingClientRect();
+
+      // Calculate mouse position relative to container
+      const mouseX = e.clientX - containerRect.left;
+      const mouseY = e.clientY - containerRect.top;
 
       // Calculate zoom
       const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
       const newScale = Math.min(Math.max(scale * zoomFactor, 0.1), 10);
 
-      // Calculate new position to zoom towards mouse
+      // Calculate the scaled dimensions
+      const newWidth = image.width * newScale;
+      const newHeight = image.height * newScale;
+
+      // Calculate the maximum allowed position to keep image within bounds
+      const maxX = Math.max(0, (newWidth - containerRect.width) / 2);
+      const maxY = Math.max(0, (newHeight - containerRect.height) / 2);
+
+      // Calculate new position maintaining the point under cursor
       const newPosition = {
-        x: position.x - (mouseX * (zoomFactor - 1)),
-        y: position.y - (mouseY * (zoomFactor - 1))
+        x: mouseX - ((mouseX - position.x) * (newScale / scale)),
+        y: mouseY - ((mouseY - position.y) * (newScale / scale))
       };
 
-      // Update state
+      // Clamp the position to keep image within bounds
+      const clampedPosition = {
+        x: Math.min(Math.max(newPosition.x, -maxX), maxX),
+        y: Math.min(Math.max(newPosition.y, -maxY), maxY)
+      };
+
       setScale(newScale);
-      setPosition(newPosition);
+      setPosition(clampedPosition);
     }
   };
 

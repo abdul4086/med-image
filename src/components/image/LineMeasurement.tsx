@@ -5,6 +5,12 @@ interface Point {
   y: number;
 }
 
+interface Measurement {
+  startPoint: Point;
+  endPoint: Point;
+  value: string;
+}
+
 interface LineMeasurementProps {
   imageRef: React.RefObject<HTMLImageElement>;
   containerRef: React.RefObject<HTMLDivElement>;
@@ -27,6 +33,7 @@ const LineMeasurement: React.FC<LineMeasurementProps> = ({
   const [startPoint, setStartPoint] = useState<Point | null>(null);
   const [endPoint, setEndPoint] = useState<Point | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
+  const [completedMeasurements, setCompletedMeasurements] = useState<Measurement[]>([]);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const calculateRealDistance = (p1: Point, p2: Point): { pixels: number; mm: number } => {
@@ -46,60 +53,84 @@ const LineMeasurement: React.FC<LineMeasurementProps> = ({
     };
   };
 
+  const getRelativeCoordinates = (e: React.MouseEvent): Point => {
+    const canvas = canvasRef.current;
+    const image = imageRef.current;
+    if (!canvas || !image) return { x: 0, y: 0 };
+
+    const canvasRect = canvas.getBoundingClientRect();
+    const imageRect = image.getBoundingClientRect();
+
+    // Get mouse position relative to canvas
+    const canvasX = e.clientX - canvasRect.left;
+    const canvasY = e.clientY - canvasRect.top;
+
+    // Calculate image position within canvas
+    const imageLeft = (canvasRect.width - imageRect.width) / 2;
+    const imageTop = (canvasRect.height - imageRect.height) / 2;
+
+    // Convert canvas coordinates to image coordinates
+    const imageX = (canvasX - imageLeft - position.x) / scale;
+    const imageY = (canvasY - imageTop - position.y) / scale;
+
+    // Return coordinates in image space
+    return {
+      x: Math.max(0, Math.min(imageX, image.width)),
+      y: Math.max(0, Math.min(imageY, image.height))
+    };
+  };
+
   const drawMeasurement = () => {
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext('2d');
-    if (!canvas || !ctx || !startPoint || !endPoint) return;
+    const image = imageRef.current;
+    if (!canvas || !ctx || !image) return;
 
-    // Clear canvas
+    // Clear the canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Calculate real-world distance
-    const distance = calculateRealDistance(startPoint, endPoint);
-
-    // Draw line
-    ctx.beginPath();
-    ctx.moveTo(startPoint.x, startPoint.y);
-    ctx.lineTo(endPoint.x, endPoint.y);
-    ctx.strokeStyle = '#00ff00';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Draw endpoints
-    [startPoint, endPoint].forEach(point => {
-      ctx.beginPath();
-      ctx.arc(point.x, point.y, 4, 0, 2 * Math.PI);
-      ctx.fillStyle = '#00ff00';
-      ctx.fill();
-    });
-
-    // Calculate midpoint for text placement
-    const midPoint = {
-      x: (startPoint.x + endPoint.x) / 2,
-      y: (startPoint.y + endPoint.y) / 2 - 15
+    // Function to convert image coordinates to canvas coordinates
+    const toCanvasCoords = (point: Point) => {
+      const imageLeft = (canvas.width - image.width * scale) / 2;
+      const imageTop = (canvas.height - image.height * scale) / 2;
+      return {
+        x: point.x * scale + imageLeft + position.x,
+        y: point.y * scale + imageTop + position.y
+      };
     };
 
-    // Prepare measurement text
-    const measurementText = `${distance.pixels.toFixed(1)} mm`;
+    // Draw current measurement
+    if (startPoint && endPoint) {
+      const start = toCanvasCoords(startPoint);
+      const end = toCanvasCoords(endPoint);
 
-    // Add background to text for better visibility
-    ctx.font = '14px Arial';
-    const textMetrics = ctx.measureText(measurementText);
-    const padding = 4;
-    
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(
-      midPoint.x - textMetrics.width / 2 - padding,
-      midPoint.y - 8 - padding,
-      textMetrics.width + padding * 2,
-      16 + padding * 2
-    );
+      ctx.beginPath();
+      ctx.moveTo(start.x, start.y);
+      ctx.lineTo(end.x, end.y);
+      ctx.strokeStyle = '#00ff00';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
 
-    // Draw measurement text
-    ctx.fillStyle = '#ffffff';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(measurementText, midPoint.x, midPoint.y);
+    // Draw completed measurements
+    completedMeasurements.forEach(measurement => {
+      const start = toCanvasCoords(measurement.startPoint);
+      const end = toCanvasCoords(measurement.endPoint);
+
+      ctx.beginPath();
+      ctx.moveTo(start.x, start.y);
+      ctx.lineTo(end.x, end.y);
+      ctx.strokeStyle = '#00ff00';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Draw measurement value
+      const midX = (start.x + end.x) / 2;
+      const midY = (start.y + end.y) / 2;
+      ctx.fillStyle = '#00ff00';
+      ctx.font = '14px Arial';
+      ctx.fillText(measurement.value, midX + 5, midY - 5);
+    });
   };
 
   useEffect(() => {
@@ -112,17 +143,6 @@ const LineMeasurement: React.FC<LineMeasurementProps> = ({
 
     drawMeasurement();
   }, [startPoint, endPoint, scale, position, pixelsPerMm]);
-
-  const getRelativeCoordinates = (e: React.MouseEvent): Point => {
-    const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-
-    const rect = canvas.getBoundingClientRect();
-    return {
-      x: e.clientX - rect.left,
-      y: e.clientY - rect.top
-    };
-  };
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!isActive) return;
@@ -145,7 +165,14 @@ const LineMeasurement: React.FC<LineMeasurementProps> = ({
     const distance = calculateRealDistance(startPoint, endPoint);
     const measurementValue = pixelsPerMm > 0
       ? `${distance.mm.toFixed(1)} mm`
-      : `${distance.pixels.toFixed(1)} px`;
+      : `${distance.pixels.toFixed(1)} mm`;
+
+    // Add to completed measurements
+    setCompletedMeasurements(prev => [...prev, {
+      startPoint,
+      endPoint,
+      value: measurementValue
+    }]);
 
     onMeasurementComplete({
       id: Date.now().toString(),
@@ -155,7 +182,7 @@ const LineMeasurement: React.FC<LineMeasurementProps> = ({
       timestamp: new Date()
     });
 
-    // Keep the measurement visible but reset for next measurement
+    // Reset current drawing points
     setStartPoint(null);
     setEndPoint(null);
   };
