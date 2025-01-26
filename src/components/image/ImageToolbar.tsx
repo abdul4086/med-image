@@ -1,5 +1,5 @@
 import React from 'react';
-import { BiReset, BiCrop, BiRuler } from 'react-icons/bi';
+import { BiReset, BiCrop, BiRuler, BiUndo, BiRedo } from 'react-icons/bi';
 import { FiMove, FiZoomIn, FiZoomOut } from 'react-icons/fi';
 import { BsCursor } from 'react-icons/bs';
 
@@ -9,6 +9,10 @@ interface ImageToolbarProps {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onReset: () => void;
+  onUndo: () => void;
+  onRedo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
   scale: number;
 }
 
@@ -18,6 +22,10 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
   onZoomIn,
   onZoomOut,
   onReset,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
   scale
 }) => {
   return (
@@ -73,6 +81,26 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
         title="Reset View"
       >
         <BiReset size={20} />
+      </button>
+
+      <button
+        className={`p-2 rounded-lg transition-all duration-200 flex items-center justify-center
+          ${!canUndo ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`}
+        onClick={onUndo}
+        disabled={!canUndo}
+        title="Undo"
+      >
+        <BiUndo size={20} />
+      </button>
+
+      <button
+        className={`p-2 rounded-lg transition-all duration-200 flex items-center justify-center
+          ${!canRedo ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200 dark:hover:bg-gray-600'}`}
+        onClick={onRedo}
+        disabled={!canRedo}
+        title="Redo"
+      >
+        <BiRedo size={20} />
       </button>
 
       <button

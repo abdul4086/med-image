@@ -19,6 +19,7 @@ interface LineMeasurementProps {
   pixelsPerMm: number;
   onMeasurementComplete: (measurement: any) => void;
   isActive: boolean;
+  measurements: any[];
 }
 
 const LineMeasurement: React.FC<LineMeasurementProps> = ({
@@ -28,7 +29,8 @@ const LineMeasurement: React.FC<LineMeasurementProps> = ({
   position,
   pixelsPerMm,
   onMeasurementComplete,
-  isActive
+  isActive,
+  measurements
 }) => {
   const [startPoint, setStartPoint] = useState<Point | null>(null);
   const [endPoint, setEndPoint] = useState<Point | null>(null);
@@ -99,7 +101,30 @@ const LineMeasurement: React.FC<LineMeasurementProps> = ({
       };
     };
 
-    // Draw current measurement
+    // Draw all existing measurements
+    measurements.forEach(measurement => {
+      if (measurement.type === 'line' && measurement.points) {
+        const { start, end } = measurement.points;
+        const startCoords = toCanvasCoords(start);
+        const endCoords = toCanvasCoords(end);
+
+        ctx.beginPath();
+        ctx.moveTo(startCoords.x, startCoords.y);
+        ctx.lineTo(endCoords.x, endCoords.y);
+        ctx.strokeStyle = '#00ff00';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Draw measurement value
+        const midX = (startCoords.x + endCoords.x) / 2;
+        const midY = (startCoords.y + endCoords.y) / 2;
+        ctx.fillStyle = '#00ff00';
+        ctx.font = '14px Arial';
+        ctx.fillText(measurement.value, midX + 5, midY - 5);
+      }
+    });
+
+    // Draw current measurement if exists
     if (startPoint && endPoint) {
       const start = toCanvasCoords(startPoint);
       const end = toCanvasCoords(endPoint);
@@ -111,26 +136,6 @@ const LineMeasurement: React.FC<LineMeasurementProps> = ({
       ctx.lineWidth = 2;
       ctx.stroke();
     }
-
-    // Draw completed measurements
-    completedMeasurements.forEach(measurement => {
-      const start = toCanvasCoords(measurement.startPoint);
-      const end = toCanvasCoords(measurement.endPoint);
-
-      ctx.beginPath();
-      ctx.moveTo(start.x, start.y);
-      ctx.lineTo(end.x, end.y);
-      ctx.strokeStyle = '#00ff00';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // Draw measurement value
-      const midX = (start.x + end.x) / 2;
-      const midY = (start.y + end.y) / 2;
-      ctx.fillStyle = '#00ff00';
-      ctx.font = '14px Arial';
-      ctx.fillText(measurement.value, midX + 5, midY - 5);
-    });
   };
 
   useEffect(() => {
@@ -142,7 +147,7 @@ const LineMeasurement: React.FC<LineMeasurementProps> = ({
     canvas.height = container.clientHeight;
 
     drawMeasurement();
-  }, [startPoint, endPoint, scale, position, pixelsPerMm]);
+  }, [measurements, startPoint, endPoint, scale, position]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!isActive) return;
@@ -156,6 +161,7 @@ const LineMeasurement: React.FC<LineMeasurementProps> = ({
     if (!isDrawing || !isActive) return;
     const coords = getRelativeCoordinates(e);
     setEndPoint(coords);
+    drawMeasurement();
   };
 
   const handleMouseUp = () => {

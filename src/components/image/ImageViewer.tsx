@@ -19,6 +19,8 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [croppedImage, setCroppedImage] = useState<string | null>(null);
   const [measurements, setMeasurements] = useState<any[]>([]);
+  const [history, setHistory] = useState<any[][]>([[]]);
+  const [historyIndex, setHistoryIndex] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const [showMeasurementDock, setShowMeasurementDock] = useState(false);
@@ -189,19 +191,58 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
     setScale(prevScale => Math.max(prevScale * 0.9, 0.1));
   };
 
+  const handleMeasurementComplete = (measurement: any) => {
+    const newMeasurements = [...measurements, measurement];
+    
+    // Create new history entry
+    const newHistory = history.slice(0, historyIndex + 1);
+    const updatedHistory = [...newHistory, newMeasurements];
+    
+    setMeasurements(newMeasurements);
+    setHistory(updatedHistory);
+    setHistoryIndex(updatedHistory.length - 1);
+
+    // If this is the first measurement and we're not calibrated, start calibration
+    if (newMeasurements.length === 1 && pixelsPerMm === 0) {
+      setIsCalibrating(true);
+    }
+  };
+
+  const handleDeleteMeasurement = (id: string) => {
+    const newMeasurements = measurements.filter(m => m.id !== id);
+    
+    // Add to history
+    const newHistory = history.slice(0, historyIndex + 1);
+    const updatedHistory = [...newHistory, newMeasurements];
+    
+    setMeasurements(newMeasurements);
+    setHistory(updatedHistory);
+    setHistoryIndex(updatedHistory.length - 1);
+  };
+
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setMeasurements(history[newIndex]);
+    }
+  };
+
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      setMeasurements(history[newIndex]);
+    }
+  };
+
   const handleReset = () => {
     setScale(1);
     setPosition({ x: 0, y: 0 });
     setCroppedImage(null);
-  };
-
-  const handleMeasurementComplete = (measurement: any) => {
-    setMeasurements([...measurements, measurement]);
-    
-    // If this is the first measurement and we're not calibrated, start calibration
-    if (measurements.length === 0 && pixelsPerMm === 0) {
-      setIsCalibrating(true);
-    }
+    setMeasurements([]);
+    setHistory([[]]);
+    setHistoryIndex(0);
   };
 
   const handleCalibration = (knownDistance: number) => {
@@ -292,7 +333,6 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
     <div className="flex h-full w-full p-4 bg-gray-100 dark:bg-gray-900 rounded-lg">
       <div className="flex-1 relative">
         <div className="bg-white dark:bg-gray-800 h-full w-full rounded-lg shadow-lg">
-          {/* Add Save Button */}
           <button
             onClick={handleSaveImage}
             className="absolute left-4 top-4 z-10 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 shadow-lg"
@@ -347,6 +387,7 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
                 pixelsPerMm={pixelsPerMm}
                 onMeasurementComplete={handleMeasurementComplete}
                 isActive={selectedTool === 'line'}
+                measurements={measurements}
               />
             )}
           </div>
@@ -360,6 +401,10 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
               onZoomIn={handleZoomIn}
               onZoomOut={handleZoomOut}
               onReset={handleReset}
+              onUndo={handleUndo}
+              onRedo={handleRedo}
+              canUndo={historyIndex > 0}
+              canRedo={historyIndex < history.length - 1}
               scale={scale}
             />
             {showMeasurementDock && (
