@@ -12,6 +12,11 @@ interface ImageViewerProps {
   imageUrl: string;
 }
 
+const MEASUREMENT_COLORS = {
+  line: '#FF0000', // Red
+  circle: '#0000FF', // Blue
+};
+
 const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const [scale, setScale] = useState(1);
@@ -258,56 +263,80 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
   const handleSaveImage = async () => {
     if (!imageRef.current) return;
 
-    // Create a canvas with the same dimensions as the displayed image
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Create a new image to ensure it's loaded
     const image = new Image();
     image.src = croppedImage || imageUrl;
 
     await new Promise<void>((resolve) => {
-        image.onload = () => {
-            // Set canvas dimensions to match the natural image size
-            canvas.width = image.naturalWidth;
-            canvas.height = image.naturalHeight;
+      image.onload = () => {
+        canvas.width = image.naturalWidth;
+        canvas.height = image.naturalHeight;
 
-            // Draw the base image
-            ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+        // Draw the base image
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 
-            // Draw all measurements
-            measurements.forEach(measurement => {
-                if (measurement.type === 'line' && measurement.points) {
-                    const { start, end } = measurement.points; // Accessing start and end points
+        // Calculate scale factors
+        const scaleX = canvas.width / imageRef.current!.width;
+        const scaleY = canvas.height / imageRef.current!.height;
 
-                    const scaleX = canvas.width / imageRef.current!.width;
-                    const scaleY = canvas.height / imageRef.current!.height;
+        // Draw all measurements
+        measurements.forEach(measurement => {
+          // Handle line measurements
+          if (measurement.type === 'line' && measurement.points) {
+            const { start, end } = measurement.points;
 
-                    ctx.beginPath();
-                    ctx.strokeStyle = '#FF0000';
-                    ctx.lineWidth = 2;
-                    ctx.moveTo(start.x * scaleX, start.y * scaleY);
-                    ctx.lineTo(end.x * scaleX, end.y * scaleY);
-                    ctx.stroke();
+            ctx.beginPath();
+            ctx.strokeStyle = MEASUREMENT_COLORS.line;
+            ctx.lineWidth = 2;
+            ctx.moveTo(start.x * scaleX, start.y * scaleY);
+            ctx.lineTo(end.x * scaleX, end.y * scaleY);
+            ctx.stroke();
 
-                    // Add measurement text
-                    ctx.font = '16px Arial';
-                    ctx.fillStyle = '#FF0000';
-                    const midX = (start.x + end.x) * scaleX / 2;
-                    const midY = (start.y + end.y) * scaleY / 2;
-                    const text = measurement.value; // Use the value from the measurement
-                    ctx.fillText(text, midX, midY - 10);
-                }
-            });
+            // Add line measurement text
+            ctx.font = '16px Arial';
+            ctx.fillStyle = MEASUREMENT_COLORS.line;
+            const midX = (start.x + end.x) * scaleX / 2;
+            const midY = (start.y + end.y) * scaleY / 2;
+            ctx.fillText(measurement.value, midX, midY - 10);
+          }
+          
+          // Handle circle measurements
+          if (measurement.type === 'circle' && measurement.circle) {
+            const { center, radius } = measurement.circle;
+            
+            ctx.beginPath();
+            ctx.strokeStyle = MEASUREMENT_COLORS.circle;
+            ctx.lineWidth = 2;
+            ctx.arc(
+              center.x * scaleX,
+              center.y * scaleY,
+              radius * scaleX,
+              0,
+              2 * Math.PI
+            );
+            ctx.stroke();
 
-            // Create download link
-            const link = document.createElement('a');
-            link.download = 'medical-image-with-measurements.png';
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-            resolve();
-        };
+            // Add circle measurement text
+            ctx.font = '16px Arial';
+            ctx.fillStyle = MEASUREMENT_COLORS.circle;
+            ctx.fillText(
+              measurement.value,
+              (center.x * scaleX) + 5,
+              (center.y * scaleY) - 10
+            );
+          }
+        });
+
+        // Create download link
+        const link = document.createElement('a');
+        link.download = 'medical-image-with-measurements.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        resolve();
+      };
     });
   };
 
