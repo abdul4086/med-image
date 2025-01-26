@@ -29,8 +29,8 @@ To set up the project locally, follow these steps:
 
 1. **Clone the Repository**:
    ```bash
-   git clone <repository-url>
-   cd medical-image-viewer
+   git clone <repository url>
+   cd med-image
    ```
 
 2. **Install Dependencies**:
@@ -76,7 +76,7 @@ The Medical Image Viewer application provides several key functionalities:
 - The application is designed to be responsive, ensuring a good user experience on both desktop and mobile devices.
 
 ### 7. Deployment
-- The application is deployed on [Vercel](https://vercel.com) (or any other hosting service you choose). You can access it at: [Your Deployed App Link](https://med-image.vercel.app/).
+- The application is deployed on [Vercel](https://vercel.com). You can access it at: [App Link](https://med-image.vercel.app/).
 
 ## Conclusion
 
