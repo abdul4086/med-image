@@ -105,18 +105,6 @@ const ImageToolbar: React.FC<ImageToolbarProps> = ({
 
       <button
         className={`p-2 rounded-lg transition-all duration-200 flex items-center justify-center ${
-          selectedTool === 'crop' 
-            ? 'bg-blue-500 text-white shadow-md' 
-            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
-        }`}
-        onClick={() => onToolSelect('crop')}
-        title="Crop Tool"
-      >
-        <BiCrop size={20} />
-      </button>
-
-      <button
-        className={`p-2 rounded-lg transition-all duration-200 flex items-center justify-center ${
           selectedTool === 'measure' 
             ? 'bg-blue-500 text-white shadow-md' 
             : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'

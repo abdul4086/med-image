@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
 import CalibrationDialog from './CalibrationDialog.tsx';
-import CropOverlay from './CropOverlay.tsx';
 import GridOverlay from './GridOverlay.tsx';
 import ImageToolbar from './ImageToolbar.tsx';
 import LineMeasurement from './LineMeasurement.tsx';
@@ -44,70 +43,6 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
         setShowMeasurementDock(false);
       }
     }
-  };
-
-  const handleCropComplete = async (crop: { x: number; y: number; width: number; height: number }) => {
-    if (!imageRef.current) return;
-
-    // Create a new image to ensure it's loaded
-    const image = new Image();
-    image.src = croppedImage || imageUrl;
-
-    await new Promise<void>((resolve) => {
-      image.onload = () => {
-        // Create canvas with natural image dimensions
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        // Get the actual image dimensions
-        const displayedWidth = imageRef.current!.width;
-        const displayedHeight = imageRef.current!.height;
-        
-        // Calculate scaling factors
-        const scaleX = image.naturalWidth / displayedWidth;
-        const scaleY = image.naturalHeight / displayedHeight;
-
-        // Convert crop coordinates to actual image coordinates
-        const actualCrop = {
-          x: crop.x * scaleX,
-          y: crop.y * scaleY,
-          width: crop.width * scaleX,
-          height: crop.height * scaleY
-        };
-
-        // Set canvas size to crop dimensions
-        canvas.width = actualCrop.width;
-        canvas.height = actualCrop.height;
-
-        // Draw the cropped portion
-        ctx.drawImage(
-          image,
-          actualCrop.x,
-          actualCrop.y,
-          actualCrop.width,
-          actualCrop.height,
-          0,
-          0,
-          actualCrop.width,
-          actualCrop.height
-        );
-
-        // Convert to base64 with maximum quality
-        const croppedDataUrl = canvas.toDataURL('image/png', 1.0);
-
-        // Create a new Image object to ensure the crop is loaded properly
-        const croppedImg = new Image();
-        croppedImg.onload = () => {
-          setCroppedImage(croppedDataUrl);
-          setSelectedTool(null);
-          setScale(1);
-          setPosition({ x: 0, y: 0 });
-          resolve();
-        };
-        croppedImg.src = croppedDataUrl;
-      };
-    });
   };
 
   const handleWheel = (e: React.WheelEvent) => {
@@ -394,7 +329,6 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
             <FaSave />
             Save Image
           </button>
-
           {/* Image Container Frame */}
           <div 
             ref={containerRef}
@@ -424,14 +358,6 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
               />
             </div>
             {scale > 1 && <GridOverlay scale={scale} />}
-            {selectedTool === 'crop' && (
-              <CropOverlay
-                onCropComplete={handleCropComplete}
-                onCancel={() => setSelectedTool(null)}
-                imageRef={imageRef}
-                scale={scale}
-              />
-            )}
             {selectedTool === 'line' && (
               <LineMeasurement
                 imageRef={imageRef}
