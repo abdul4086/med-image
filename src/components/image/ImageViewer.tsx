@@ -5,6 +5,7 @@ import GridOverlay from './GridOverlay.tsx';
 import ImageToolbar from './ImageToolbar.tsx';
 import LineMeasurement from './LineMeasurement.tsx';
 import MeasurementDock from './MeasurementDock.tsx';
+import CircleMeasurement from './CircleMeasurement.tsx';
 import { FaSave } from 'react-icons/fa';
 
 interface ImageViewerProps {
@@ -387,6 +388,18 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
                 pixelsPerMm={pixelsPerMm}
                 onMeasurementComplete={handleMeasurementComplete}
                 isActive={selectedTool === 'line'}
+                measurements={measurements}
+              />
+            )}
+            {selectedTool === 'circle' && (
+              <CircleMeasurement
+                imageRef={imageRef}
+                containerRef={containerRef}
+                scale={scale}
+                position={position}
+                pixelsPerMm={pixelsPerMm}
+                onMeasurementComplete={handleMeasurementComplete}
+                isActive={selectedTool === 'circle'}
                 measurements={measurements}
               />
             )}

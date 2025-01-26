@@ -16,7 +16,7 @@ const MeasurementDock: React.FC<MeasurementDockProps> = ({
 }) => {
   const tools = [
     { id: 'line', icon: BiRuler, label: 'Line' },
-    // { id: 'circle', icon: BiCircle, label: 'Circle/Ellipse' },
+    { id: 'circle', icon: BiCircle, label: 'Circle/Ellipse' },
     // { id: 'angle', icon: FaAngleRight, label: 'Angle' },
     // { id: 'annotate', icon: BsPencil, label: 'Annotate' },
   ];
