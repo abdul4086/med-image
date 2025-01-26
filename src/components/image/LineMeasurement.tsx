@@ -111,7 +111,7 @@ const LineMeasurement: React.FC<LineMeasurementProps> = ({
         ctx.beginPath();
         ctx.moveTo(startCoords.x, startCoords.y);
         ctx.lineTo(endCoords.x, endCoords.y);
-        ctx.strokeStyle = '#FF0000';
+        ctx.strokeStyle = '#00ff00';
         ctx.lineWidth = 2;
         ctx.stroke();
 
@@ -132,7 +132,7 @@ const LineMeasurement: React.FC<LineMeasurementProps> = ({
       ctx.beginPath();
       ctx.moveTo(start.x, start.y);
       ctx.lineTo(end.x, end.y);
-      ctx.strokeStyle = '#FF0000';
+      ctx.strokeStyle = '#00ff00';
       ctx.lineWidth = 2;
       ctx.stroke();
     }

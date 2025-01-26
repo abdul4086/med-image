@@ -6,6 +6,7 @@ import ImageToolbar from './ImageToolbar.tsx';
 import LineMeasurement from './LineMeasurement.tsx';
 import MeasurementDock from './MeasurementDock.tsx';
 import CircleMeasurement from './CircleMeasurement.tsx';
+import AngleMeasurement from './AngleMeasurement.tsx';
 import { FaSave } from 'react-icons/fa';
 
 interface ImageViewerProps {
@@ -15,6 +16,7 @@ interface ImageViewerProps {
 const MEASUREMENT_COLORS = {
   line: '#FF0000', // Red
   circle: '#0000FF', // Blue
+  angle: '#00FF00', // Green
 };
 
 const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
@@ -328,6 +330,28 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
               (center.y * scaleY) - 10
             );
           }
+          
+          // Handle angle measurements
+          if (measurement.type === 'angle' && measurement.points) {
+            const { p1, p2, p3 } = measurement.points;
+            
+            ctx.beginPath();
+            ctx.strokeStyle = MEASUREMENT_COLORS.angle;
+            ctx.lineWidth = 2;
+            ctx.moveTo(p1.x * scaleX, p1.y * scaleY);
+            ctx.lineTo(p2.x * scaleX, p2.y * scaleY);
+            ctx.lineTo(p3.x * scaleX, p3.y * scaleY);
+            ctx.stroke();
+
+            // Add angle measurement text
+            ctx.font = '16px Arial';
+            ctx.fillStyle = MEASUREMENT_COLORS.angle;
+            ctx.fillText(
+              measurement.value,
+              p2.x * scaleX + 5,
+              p2.y * scaleY - 5
+            );
+          }
         });
 
         // Create download link
@@ -429,6 +453,18 @@ const ImageViewer: React.FC<ImageViewerProps> = ({ imageUrl }) => {
                 pixelsPerMm={pixelsPerMm}
                 onMeasurementComplete={handleMeasurementComplete}
                 isActive={selectedTool === 'circle'}
+                measurements={measurements}
+              />
+            )}
+            {selectedTool === 'angle' && (
+              <AngleMeasurement
+                imageRef={imageRef}
+                containerRef={containerRef}
+                scale={scale}
+                position={position}
+                pixelsPerMm={pixelsPerMm}
+                onMeasurementComplete={handleMeasurementComplete}
+                isActive={selectedTool === 'angle'}
                 measurements={measurements}
               />
             )}
